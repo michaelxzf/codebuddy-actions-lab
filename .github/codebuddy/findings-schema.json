@@ -1,0 +1,1 @@
+{"type":"object","required":["summary","findings"],"properties":{"summary":{"type":"string"},"findings":{"type":"array","items":{"type":"object","required":["severity","file","line","title","detail"],"properties":{"severity":{"enum":["error","warning","notice"]},"file":{"type":"string"},"line":{"type":"integer"},"title":{"type":"string"},"detail":{"type":"string"}}}}}}

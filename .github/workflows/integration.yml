@@ -1,0 +1,31 @@
+name: Nightly integration
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 19 * * *'   # 03:30 Asia/Shanghai
+permissions:
+  contents: read
+  actions: read
+jobs:
+  integration:
+    runs-on: [self-hosted, codebuddy]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m venv .venv && .venv/bin/pip -q install -e . pytest
+      - name: Integration tests (rate-card fixtures)
+        run: .venv/bin/pytest -q tests/integration
+  explain:
+    needs: integration
+    if: failure()
+    runs-on: [self-hosted, codebuddy]
+    steps:
+      - uses: actions/checkout@v4
+      - name: CodeBuddy explains the failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run view ${{ github.run_id }} --log-failed | tail -80 > failure.log
+          codebuddy -p "The nightly integration job failed. The failing log is on stdin. Read the code and fixtures, then write for the job summary: \
+          '### Why it failed' (2-3 sentences, plain English), '### Evidence' (file:line refs), '### Suggested fix' (a short diff), '### Owner hint' (which area). Markdown only." \
+            --allowedTools "Read Grep Glob" --max-turns 15 < failure.log > explain.md
+          { echo "## 🤖 CodeBuddy failure explainer"; echo; cat explain.md; } >> "$GITHUB_STEP_SUMMARY"

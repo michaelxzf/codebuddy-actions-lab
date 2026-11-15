@@ -1,0 +1,37 @@
+name: CodeBuddy on-demand review
+on:
+  workflow_dispatch:
+    inputs:
+      focus:
+        description: What should CodeBuddy look at?
+        type: choice
+        options: [correctness, security, performance, api-design]
+        default: correctness
+      path:
+        description: Folder to review
+        type: string
+        default: src/unitconv
+      audience:
+        description: Who reads the report?
+        type: choice
+        options: [engineers, managers]
+        default: engineers
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: [self-hosted, codebuddy]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: CodeBuddy review → job summary
+        env:
+          FOCUS: ${{ inputs.focus }}
+          TARGET: ${{ inputs.path }}
+          AUDIENCE: ${{ inputs.audience }}
+        run: |
+          codebuddy -p "Review the code in $TARGET with a $FOCUS focus for an audience of $AUDIENCE. \
+          Output GitHub-flavoured Markdown only: a one-line verdict, a findings table (Severity | File:line | Finding | Fix), \
+          and at most 3 next steps. Follow CODEBUDDY.md. No preamble." \
+            --allowedTools "Read Grep Glob" --max-turns 15 > summary.md
+          { echo "## 🤖 CodeBuddy review · focus: \`$FOCUS\` · \`$TARGET\`"; echo; cat summary.md; } >> "$GITHUB_STEP_SUMMARY"

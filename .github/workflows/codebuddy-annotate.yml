@@ -1,0 +1,21 @@
+name: CodeBuddy annotations
+on:
+  pull_request:
+permissions:
+  contents: read
+  checks: write
+jobs:
+  annotate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, codebuddy]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: CodeBuddy review as annotations
+        run: |
+          git diff "origin/${{ github.base_ref }}...HEAD" > pr.diff
+          codebuddy -p "Review this PR diff (on stdin) for unitconv following CODEBUDDY.md. Report only real issues on added lines, with the exact new-file line." \
+            --output-format json --json-schema "$(cat .github/codebuddy/findings-schema.json)" \
+            --allowedTools "Read Grep Glob" --max-turns 15 < pr.diff > review.json
+          python3 .github/codebuddy/annotate.py review.json
