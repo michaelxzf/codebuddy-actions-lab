@@ -27,5 +27,6 @@ jobs:
           gh run view ${{ github.run_id }} --log-failed | tail -80 > failure.log
           codebuddy -p "The nightly integration job failed. The failing log is on stdin. Read the code and fixtures, then write for the job summary: \
           '### Why it failed' (2-3 sentences, plain English), '### Evidence' (file:line refs), '### Suggested fix' (a short diff), '### Owner hint' (which area). Markdown only." \
-            --allowedTools "Read Grep Glob" --max-turns 15 < failure.log > explain.md
+            --allowedTools "Read Grep Glob" --max-turns 15 < failure.log > explain.md || true
+          [ -s explain.md ] || { sleep 5; codebuddy -p "Explain this CI failure log (stdin) for a job summary: Why it failed, Evidence, Suggested fix, Owner hint. Markdown only." --allowedTools "Read Grep Glob" --max-turns 15 < failure.log > explain.md; }
           { echo "## 🤖 CodeBuddy failure explainer"; echo; cat explain.md; } >> "$GITHUB_STEP_SUMMARY"

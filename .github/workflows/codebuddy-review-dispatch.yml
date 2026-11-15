@@ -33,5 +33,7 @@ jobs:
           codebuddy -p "Review the code in $TARGET with a $FOCUS focus for an audience of $AUDIENCE. \
           Output GitHub-flavoured Markdown only: a one-line verdict, a findings table (Severity | File:line | Finding | Fix), \
           and at most 3 next steps. Follow CODEBUDDY.md. No preamble." \
-            --allowedTools "Read Grep Glob" --max-turns 15 > summary.md
+            --allowedTools "Read Grep Glob" --max-turns 15 > summary.md || true
+          # retry once on a transient model error (empty output)
+          [ -s summary.md ] || { sleep 5; codebuddy -p "Review the code in $TARGET with a $FOCUS focus for $AUDIENCE. Markdown only: verdict, findings table (Severity | File:line | Finding | Fix), 3 next steps." --allowedTools "Read Grep Glob" --max-turns 15 > summary.md; }
           { echo "## 🤖 CodeBuddy review · focus: \`$FOCUS\` · \`$TARGET\`"; echo; cat summary.md; } >> "$GITHUB_STEP_SUMMARY"
