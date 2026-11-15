@@ -33,6 +33,5 @@ def convert(value: float | Decimal, src: str, dst: str, places: int = 4) -> Deci
 
 
 def to_base(value, unit):
-    import math
     dim = _dimension(unit)
     return Decimal(str(value)) * UNITS[dim][unit]
