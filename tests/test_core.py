@@ -1,6 +1,8 @@
 from decimal import Decimal
+
 import pytest
-from unitconv import convert, UnknownUnit, IncompatibleUnits
+
+from unitconv import IncompatibleUnits, UnknownUnit, convert
 
 
 @pytest.mark.parametrize("v,src,dst,want", [(1, "km", "m", Decimal("1000")), (1, "mi", "km", Decimal("1.6093")), (2, "lb", "kg", Decimal("0.9072")), (1, "gal", "l", Decimal("3.7854"))])
