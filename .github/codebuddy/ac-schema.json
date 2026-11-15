@@ -1,0 +1,5 @@
+{"type":"object","required":["verdict","summary","criteria"],"properties":{
+ "verdict":{"enum":["meets","partially_meets","does_not_meet"]},
+ "summary":{"type":"string"},
+ "criteria":{"type":"array","items":{"type":"object","required":["criterion","met","evidence"],"properties":{
+   "criterion":{"type":"string"},"met":{"type":"boolean"},"evidence":{"type":"string"}}}}}}

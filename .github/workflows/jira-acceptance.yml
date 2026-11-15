@@ -1,0 +1,45 @@
+name: Jira acceptance check
+on:
+  pull_request:
+    types: [opened, synchronize]
+  pull_request_target:
+    types: [closed]
+permissions:
+  contents: read
+  pull-requests: write
+env:
+  JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+  JIRA_EMAIL: ${{ vars.JIRA_EMAIL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  GH_TOKEN: ${{ github.token }}
+  PR: ${{ github.event.pull_request.number }}
+jobs:
+  check:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, codebuddy]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Find the Jira key in branch or title
+        id: key
+        env: { HEAD: '${{ github.head_ref }}', TITLE: '${{ github.event.pull_request.title }}' }
+        run: echo "key=$(printf '%s %s' "$HEAD" "$TITLE" | grep -oE '[A-Z][A-Z0-9]+-[0-9]+' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: CodeBuddy checks the PR against the Jira acceptance criteria
+        if: steps.key.outputs.key != ''
+        run: |
+          python3 .github/codebuddy/jira.py issue ${{ steps.key.outputs.key }} > ticket.md
+          { cat ticket.md; echo; echo '--- PR DIFF ---'; git diff "origin/${{ github.base_ref }}...HEAD"; } > context.md
+          codebuddy -p "Stdin holds a Jira issue (with acceptance criteria) followed by a PR diff. For EACH acceptance criterion, decide whether the PR meets it; read the code and tests in the workspace for evidence and cite file:line. Be strict: a criterion without a test is not met." \
+            --output-format json --json-schema "$(cat .github/codebuddy/ac-schema.json)" \
+            --allowedTools "Read Grep Glob" --max-turns 20 < context.md > ac.json
+          python3 .github/codebuddy/ac_report.py ${{ steps.key.outputs.key }} ac.json
+  done:
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.merged
+    runs-on: [self-hosted, codebuddy]
+    steps:
+      - uses: actions/checkout@v4
+      - env: { TITLE: '${{ github.event.pull_request.title }}', HEAD: '${{ github.head_ref }}' }
+        run: |
+          KEY=$(printf '%s %s' "$HEAD" "$TITLE" | grep -oE '[A-Z][A-Z0-9]+-[0-9]+' | head -1)
+          [ -n "$KEY" ] && python3 .github/codebuddy/jira.py transition "$KEY" Done

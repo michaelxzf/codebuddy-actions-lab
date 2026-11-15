@@ -23,3 +23,6 @@ line-length = 200
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+".github/**" = ["E501"]
