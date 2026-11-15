@@ -24,7 +24,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run view ${{ github.run_id }} --log-failed | tail -80 > failure.log
+          JOB=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs -q '.jobs[] | select(.name=="integration") | .id')
+          gh api repos/${{ github.repository }}/actions/jobs/$JOB/logs | tail -80 > failure.log
           codebuddy -p "The nightly integration job failed. The failing log is on stdin. Read the code and fixtures, then write for the job summary: \
           '### Why it failed' (2-3 sentences, plain English), '### Evidence' (file:line refs), '### Suggested fix' (a short diff), '### Owner hint' (which area). Markdown only." \
             --allowedTools "Read Grep Glob" --max-turns 15 < failure.log > explain.md || true
