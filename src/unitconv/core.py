@@ -25,6 +25,8 @@ def _dimension(unit: str) -> str:
 
 def convert(value: float | Decimal, src: str, dst: str, places: int = 4) -> Decimal:
     """Convert value from src unit to dst unit, rounded to `places` decimals."""
+    if Decimal(str(value)) < 0:
+        raise ValueError("value must not be negative")
     d1, d2 = _dimension(src), _dimension(dst)
     if d1 != d2:
         raise IncompatibleUnits(f"{src} ({d1}) -> {dst} ({d2})")

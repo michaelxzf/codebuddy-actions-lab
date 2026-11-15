@@ -23,3 +23,8 @@ def test_incompatible():
 def test_to_base():
     from unitconv.core import to_base
     assert to_base(2, "km") == 2000
+
+
+def test_negative_rejected():
+    with pytest.raises(ValueError):
+        convert(-12, "kg", "lb")
