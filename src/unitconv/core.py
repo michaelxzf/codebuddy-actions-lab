@@ -30,3 +30,12 @@ def convert(value: float | Decimal, src: str, dst: str, places: int = 4) -> Deci
         raise IncompatibleUnits(f"{src} ({d1}) -> {dst} ({d2})")
     base = Decimal(str(value)) * UNITS[d1][src]
     return round(base / UNITS[d2][dst], places)
+
+
+def convert_temperature(value, src, dst):
+    """Convert between C, F and K."""
+    v = float(value)
+    if src == dst:
+        return v
+    c = (v - 32) * 5 / 9 if src == "F" else v - 273.15 if src == "K" else v
+    return c * 9 / 5 + 32 if dst == "F" else c + 273 if dst == "K" else c
