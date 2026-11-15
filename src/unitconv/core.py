@@ -30,3 +30,9 @@ def convert(value: float | Decimal, src: str, dst: str, places: int = 4) -> Deci
         raise IncompatibleUnits(f"{src} ({d1}) -> {dst} ({d2})")
     base = Decimal(str(value)) * UNITS[d1][src]
     return round(base / UNITS[d2][dst], places)
+
+
+def to_base(value, unit):
+    import math
+    dim = _dimension(unit)
+    return Decimal(str(value)) * UNITS[dim][unit]

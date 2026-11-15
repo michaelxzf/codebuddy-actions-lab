@@ -18,3 +18,8 @@ def test_unknown_unit():
 def test_incompatible():
     with pytest.raises(IncompatibleUnits):
         convert(1, "kg", "m")
+
+
+def test_to_base():
+    from unitconv.core import to_base
+    assert to_base(2, "km") == 2000
